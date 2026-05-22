@@ -61,6 +61,10 @@ extension OSCTCPServer {
 
         nonisolated(unsafe) private var _notificationHandler: Parent.NotificationHandlerBlock?
 
+        var localHost: String? {
+            isStarted ? channel?.localAddress?.ipAddress : nil
+        }
+
         var localPort: UInt16 {
             UInt16(channel?.localAddress?.port ?? 0)
         }

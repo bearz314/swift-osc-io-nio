@@ -40,6 +40,12 @@ extension OSCUDPServer {
 
         nonisolated(unsafe) private var _receiveErrorHandler: OSCDecodeErrorHandlerBlock?
 
+        var localHost: String? {
+            isStarted
+                ? (ipv4Channel?.localAddress?.ipAddress ?? ipv6Channel?.localAddress?.ipAddress)
+                : nil
+        }
+
         var localPort: UInt16 {
             if let port = ipv4Channel?.localAddress?.port ?? ipv6Channel?.localAddress?.port {
                 return UInt16(port)

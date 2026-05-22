@@ -27,6 +27,12 @@ extension OSCUDPClient {
         // so we don't need to wrap it with `syncQueue` to synchronize
         nonisolated(unsafe) private var ipv6Channel: (any Channel)?
 
+        var localHost: String? {
+            isStarted
+                ? (ipv4Channel?.localAddress?.ipAddress ?? ipv6Channel?.localAddress?.ipAddress)
+                : nil
+        }
+        
         var localPort: UInt16 {
             if let port = ipv4Channel?.localAddress?.port ?? ipv6Channel?.localAddress?.port {
                 UInt16(port)

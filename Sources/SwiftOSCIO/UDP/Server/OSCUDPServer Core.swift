@@ -84,11 +84,7 @@ extension OSCUDPServer {
         nonisolated(unsafe) private var _isIPv6Enabled: Bool
 
         var isStarted: Bool {
-            if isIPv6Enabled {
-                isIPv4Started && isIPv6Started
-            } else {
-                isIPv4Started
-            }
+            isIPv4Started || isIPv6Started
         }
 
         private var isIPv4Started: Bool {

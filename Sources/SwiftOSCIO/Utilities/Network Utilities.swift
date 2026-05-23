@@ -150,33 +150,35 @@ func resolveSocketAddressPreferringIPv4(
 /// This method is designed to be used by OSC classes that implement dual channels for both IPv4 or IPv6.
 /// If the channel is not used, `nil` is returned and is not an error condition.
 func hostAddressStringForBinding(interface: String?, isIPv4: Bool) throws -> String? {
-    if let interface {
-        // allow use of wildcard addresses
-        if interface == "0.0.0.0" || interface == "::" {
-            if interface == "0.0.0.0", isIPv4 {
-                "0.0.0.0"
-            } else if interface == "::", !isIPv4 {
-                "::"
-            } else {
-                nil
-            }
-        }
-        // interface supplied by the user could be IPv4 or IPv6. we only want to attempt to
-        // bind to the appropriate IP protocol since this classes uses two channels (IPv4 and IPv6)
-        else if let addr = try? SocketAddress(ipAddress: interface, port: 1) {
-            // interface is an address and not a name
-            if addr.protocol == (isIPv4 ? .inet : .inet6) {
-                try resolveSocketAddressString(ofNetworkDeviceNameOrAddress: interface, isIPv6Enabled: !isIPv4)
-            } else {
-                nil
-            }
-        }
-        // interface is likely a name and not an address
-        else {
-            try resolveSocketAddressString(ofNetworkDeviceNameOrAddress: interface, isIPv6Enabled: !isIPv4)
-        }
-    } else {
+    guard let interface else {
         // Don't bind to "localhost", "127.0.0.1" (IPv4) or "::1" (IPv6)
-        isIPv4 ? "0.0.0.0" : "::"
+        return isIPv4 ? "0.0.0.0" : "::"
+    }
+    
+    // allow use of wildcard addresses
+    return if interface == "0.0.0.0" || interface == "::" {
+        if interface == "0.0.0.0", isIPv4 {
+            "0.0.0.0"
+        } else if interface == "::", !isIPv4 {
+            "::"
+        } else {
+            // channel not used
+            nil
+        }
+    }
+    // interface supplied by the user could be IPv4 or IPv6. we only want to attempt to
+    // bind to the appropriate IP protocol since this classes uses two channels (IPv4 and IPv6)
+    else if let addr = try? SocketAddress(ipAddress: interface, port: 1) { // port number doesn't matter here
+        // interface is an address and not a name
+        if addr.protocol == (isIPv4 ? .inet : .inet6) {
+            try resolveSocketAddressString(ofNetworkDeviceNameOrAddress: interface, isIPv6Enabled: !isIPv4)
+        } else {
+            // channel not used
+            nil
+        }
+    }
+    // interface is likely a name and not an address
+    else {
+        try resolveSocketAddressString(ofNetworkDeviceNameOrAddress: interface, isIPv6Enabled: !isIPv4)
     }
 }

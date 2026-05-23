@@ -47,10 +47,18 @@ extension OSCUDPServer {
         }
 
         var localPort: UInt16 {
-            if let port = ipv4Channel?.localAddress?.port ?? ipv6Channel?.localAddress?.port {
+            if let port = localPortIPv4 ?? localPortIPv6 {
                 return UInt16(port)
             }
             return preferredLocalPort ?? 0
+        }
+        
+        var localPortIPv4: UInt16? {
+            if let port = ipv4Channel?.localAddress?.port { UInt16(port) } else { nil }
+        }
+        
+        var localPortIPv6: UInt16? {
+            if let port = ipv6Channel?.localAddress?.port { UInt16(port) } else { nil }
         }
 
         private var preferredLocalPort: UInt16? {
@@ -154,7 +162,15 @@ extension OSCUDPServer.Core {
         // `nil` return value is not an error condition; just means this channel is not used
         guard let host = try hostAddressStringForBinding(interface: interface, isIPv4: isIPv4) else { return nil }
 
-        let port = Int(preferredLocalPort ?? localPort)
+        // use previous port, otherwise assign random port
+        let port = if let inUsePort = localPortIPv4 ?? localPortIPv6 {
+            Int(inUsePort)
+        } else if let preferredLocalPort {
+            Int(preferredLocalPort)
+        } else {
+            // the port will be randomly assigned by the system
+            0
+        }
 
         let reuseAddress: ChannelOptions.Types.SocketOption.Value = isPortReuseEnabled ? 1 : 0
         let bootstrap = DatagramBootstrap(group: .singletonMultiThreadedEventLoopGroup)

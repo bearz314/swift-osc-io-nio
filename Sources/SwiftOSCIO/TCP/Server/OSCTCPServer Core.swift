@@ -235,7 +235,7 @@ extension OSCTCPServer.Core {
         toClientIDs clientIDs: [OSCTCPClientSessionID]?,
         errorHandler: ((_ clientID: OSCTCPClientSessionID, _ error: any Error) -> Void)?
     ) {
-        let clientIDs = clientIDs ?? queue.sync { Array(_clients.keys) }
+        let clientIDs = clientIDs ?? Array(_clients.keys)
         for clientID in clientIDs {
             do {
                 try send(packet, toClientID: clientID)

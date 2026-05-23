@@ -11,6 +11,4 @@ import SwiftOSCCore
 import SwiftOSCIOCore
 
 /// Internal protocol that TCP-based OSC classes adopt in order to handle incoming OSC data.
-protocol _OSCTCPPacketDispatcherProtocol: OSCTCPPacketDispatcherProtocol {
-    var channel: (any Channel)? { get }
-}
+protocol _OSCTCPPacketDispatcherProtocol: OSCTCPPacketDispatcherProtocol { }

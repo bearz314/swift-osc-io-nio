@@ -19,7 +19,11 @@ extension OSCTCPServer {
 
         // anywhere that we are assigning this variable, it is wrapped in sync calls to `queue`
         // so we don't need to wrap it with `syncQueue` to synchronize
-        nonisolated(unsafe) var channel: (any Channel)?
+        nonisolated(unsafe) private var ipv4Channel: (any Channel)?
+        
+        // anywhere that we are assigning this variable, it is wrapped in sync calls to `queue`
+        // so we don't need to wrap it with `syncQueue` to synchronize
+        nonisolated(unsafe) private var ipv6Channel: (any Channel)?
 
         /// Currently connected client sessions.
         private var _clients: [OSCTCPClientSessionID: ClientConnection] {
@@ -62,11 +66,16 @@ extension OSCTCPServer {
         nonisolated(unsafe) private var _notificationHandler: Parent.NotificationHandlerBlock?
 
         var localHost: String? {
-            isStarted ? channel?.localAddress?.ipAddress : nil
+            isStarted
+                ? (ipv4Channel?.localAddress?.ipAddress ?? ipv6Channel?.localAddress?.ipAddress)
+                : nil
         }
 
         var localPort: UInt16 {
-            UInt16(channel?.localAddress?.port ?? 0)
+            if let port = ipv4Channel?.localAddress?.port ?? ipv6Channel?.localAddress?.port {
+                return UInt16(port)
+            }
+            return preferredLocalPort ?? 0
         }
 
         private var preferredLocalPort: UInt16? {
@@ -93,7 +102,19 @@ extension OSCTCPServer {
         nonisolated(unsafe) private var _isIPv6Enabled: Bool
 
         var isStarted: Bool {
-            channel?.isActive ?? false
+            if isIPv6Enabled {
+                isIPv4Started && isIPv6Started
+            } else {
+                isIPv4Started
+            }
+        }
+        
+        private var isIPv4Started: Bool {
+            ipv4Channel?.isActive ?? false
+        }
+        
+        private var isIPv6Started: Bool {
+            ipv6Channel?.isActive ?? false
         }
 
         let framingMode: OSCTCPFramingMode
@@ -131,62 +152,78 @@ extension OSCTCPServer.Core: Sendable { }
 extension OSCTCPServer.Core {
     func start() throws {
         try queue.sync {
-            guard !isStarted else { return }
-
-            let bootstrap = ServerBootstrap(group: .singletonMultiThreadedEventLoopGroup)
-                .serverChannelOption(.socketOption(.so_reuseaddr), value: 1)
-                .childChannelInitializer { channel in
-                    channel.eventLoop.makeCompletedFuture {
-                        switch self.framingMode {
-                        case .osc1_0:
-                            try channel.pipeline
-                                .syncOperations
-                                .addHandler(ByteToMessageHandler(OSCTCPLengthHeaderFrameDecoder()))
-                        case .osc1_1:
-                            try channel.pipeline
-                                .syncOperations
-                                .addHandler(ByteToMessageHandler(OSCTCPSLIPFrameDecoder()))
-                        }
+            try _start()
+        }
+    }
+    
+    func _start() throws {
+        try _startIPv4()
+        if isIPv6Enabled { try _startIPv6() }
+    }
+    
+    private func _startIPv4() throws {
+        guard !isIPv4Started else { return }
+        if let channel = try _start(isIPv4: true) { ipv4Channel = channel }
+    }
+    
+    private func _startIPv6() throws {
+        guard !isIPv6Started else { return }
+        if let channel = try _start(isIPv4: false) { ipv6Channel = channel }
+    }
+    
+    private func _start(isIPv4: Bool) throws -> (any Channel)? {
+        if isIPv4 { _stopIPv4() } else { _stopIPv6() }
+        
+        // bind to interface, if specified
+        // `nil` return value is not an error condition; just means this channel is not used
+        guard let host = try hostAddressStringForBinding(interface: interface, isIPv4: isIPv4) else { return nil }
+        
+        let port = Int(preferredLocalPort ?? localPort)
+        
+        let bootstrap = ServerBootstrap(group: .singletonMultiThreadedEventLoopGroup)
+            .serverChannelOption(.socketOption(.so_reuseaddr), value: 1)
+            .childChannelInitializer { channel in
+                channel.eventLoop.makeCompletedFuture {
+                    switch self.framingMode {
+                    case .osc1_0:
                         try channel.pipeline
                             .syncOperations
-                            .addHandler(ChildChannelHandler(server: self))
+                            .addHandler(ByteToMessageHandler(OSCTCPLengthHeaderFrameDecoder()))
+                    case .osc1_1:
+                        try channel.pipeline
+                            .syncOperations
+                            .addHandler(ByteToMessageHandler(OSCTCPSLIPFrameDecoder()))
                     }
+                    try channel.pipeline
+                        .syncOperations
+                        .addHandler(ChildChannelHandler(server: self))
                 }
-
-            // bind to interface, if specified
-            let host: String = if let interface {
-                switch interface {
-                case "0.0.0.0",
-                     "::" where isIPv6Enabled:
-                    // pass thru wildcard
-                    interface
-                default:
-                    try resolveSocketAddressString(ofNetworkDeviceNameOrAddress: interface, isIPv6Enabled: isIPv6Enabled)
-                }
-            } else {
-                // Don't bind to "localhost", "127.0.0.1" (IPv4) or "::1" (IPv6)
-                isIPv6Enabled ? "::" : "0.0.0.0"
             }
-
-            let port = Int(preferredLocalPort ?? localPort)
-
-            let configuredChannel = bootstrap
-                .bind(host: host, port: port)
-
-            channel = try configuredChannel
-                .wait()
-        }
+        
+        let configuredChannel = bootstrap
+            .bind(host: host, port: port)
+        
+        let waitingChannel = try configuredChannel
+            .wait()
+        
+        return waitingChannel
     }
 
     func stop() {
-        // disconnect all clients
-        closeClients()
-
         queue.sync {
-            // close server
-            channel?.close(promise: nil)
-            channel = nil
+            _stopIPv4()
+            _stopIPv6()
         }
+    }
+    
+    private func _stopIPv4() {
+        try? ipv4Channel?.close().wait()
+        ipv4Channel = nil
+    }
+    
+    private func _stopIPv6() {
+        try? ipv6Channel?.close().wait()
+        ipv6Channel = nil
     }
 }
 

@@ -165,7 +165,7 @@ extension OSCTCPClient.Core {
             let resolvedAddress: SocketAddress
             if !isIPv6Enabled, isIPv6AddressTranslationToIPv4Enabled {
                 // translate an IPv6 host/IP to an IPv4 if possible.
-                let proposedRemoteHost = try IPUtils.ipAddressUsingReverseLookup(forHostnameOrIPAddress: self.remoteHost, family: .ipv4)
+                let proposedRemoteHost = try IPUtils.ipAddressUsingReverseLookup(forHostnameOrIPAddress: remoteHost, family: .ipv4)
                 guard let proposedRemoteHost else {
                     throw OSCIOError.noRemoteHost // TODO: could use a new invalidRemoteHost case
                 }

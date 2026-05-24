@@ -192,6 +192,7 @@ extension OSCUDPSocket.Core {
 
         let broadcast: ChannelOptions.Types.SocketOption.Value = isIPv4BroadcastEnabled ? 1 : 0
         let bootstrap = DatagramBootstrap(group: .singletonMultiThreadedEventLoopGroup)
+            .channelOption(.socketOption(.so_reuseaddr), value: 1)
             .channelOption(.socketOption(.so_broadcast), value: broadcast)
             .channelInitializer { channel in
                 channel.pipeline.addHandler(OSCUDPChannelHandler(oscServer: self))

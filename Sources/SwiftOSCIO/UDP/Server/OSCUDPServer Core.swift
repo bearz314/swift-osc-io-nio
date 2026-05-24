@@ -70,7 +70,7 @@ extension OSCUDPServer {
 
         let interface: String?
 
-        var isPortReuseEnabled: Bool {
+        var isPortReuseEnabled: Bool { // TODO: does nothing now
             get { syncQueue.sync { _isPortReuseEnabled } }
             set { syncQueue.sync { _isPortReuseEnabled = newValue } }
         }
@@ -172,9 +172,8 @@ extension OSCUDPServer.Core {
             0
         }
 
-        let reuseAddress: ChannelOptions.Types.SocketOption.Value = isPortReuseEnabled ? 1 : 0
         let bootstrap = DatagramBootstrap(group: .singletonMultiThreadedEventLoopGroup)
-            .channelOption(.socketOption(.so_reuseaddr), value: reuseAddress)
+            .channelOption(.socketOption(.so_reuseaddr), value: 1)
             .channelInitializer { channel in
                 channel.pipeline.addHandler(OSCUDPChannelHandler(oscServer: self))
             }

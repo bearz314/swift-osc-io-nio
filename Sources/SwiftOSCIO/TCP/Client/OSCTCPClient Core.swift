@@ -128,6 +128,7 @@ extension OSCTCPClient.Core {
 
             // create the client bootstrap
             var bootstrap = ClientBootstrap(group: .singletonMultiThreadedEventLoopGroup)
+                .channelOption(.socketOption(.so_reuseaddr), value: 1)
                 .connectTimeout(.seconds(timeout))
                 .channelInitializer { channel in
                     channel.eventLoop.makeCompletedFuture {

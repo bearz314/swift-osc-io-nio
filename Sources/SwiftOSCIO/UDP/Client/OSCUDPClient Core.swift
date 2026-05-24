@@ -57,7 +57,7 @@ extension OSCUDPClient {
 
         let interface: String?
 
-        var isPortReuseEnabled: Bool {
+        var isPortReuseEnabled: Bool { // TODO: does nothing now
             get { syncQueue.sync { _isPortReuseEnabled } }
             set { syncQueue.sync { _isPortReuseEnabled = newValue } }
         }
@@ -175,11 +175,10 @@ extension OSCUDPClient.Core {
         }
 
         // Channel Setup
-        let reuseAddress: ChannelOptions.Types.SocketOption.Value = isPortReuseEnabled ? 1 : 0
         let broadcast: ChannelOptions.Types.SocketOption.Value = _isIPv4BroadcastEnabled ? 1 : 0
         let bootstrap = DatagramBootstrap(group: .singletonMultiThreadedEventLoopGroup)
             // configure port reuse
-            .channelOption(.socketOption(.so_reuseaddr), value: reuseAddress)
+            .channelOption(.socketOption(.so_reuseaddr), value: 1)
             // configure ipv4 broadcast
             .channelOption(.socketOption(.so_broadcast), value: broadcast)
 

@@ -199,7 +199,6 @@ extension OSCTCPServer.Core {
         
         let bootstrap = ServerBootstrap(group: .singletonMultiThreadedEventLoopGroup)
             .serverChannelOption(.socketOption(.so_reuseaddr), value: reuseValue)
-            .childChannelOption(.socketOption(.so_reuseaddr), value: reuseValue)
             .childChannelInitializer { channel in
                 channel.eventLoop.makeCompletedFuture {
                     switch self.framingMode {
@@ -217,6 +216,7 @@ extension OSCTCPServer.Core {
                         .addHandler(ChildChannelHandler(server: self))
                 }
             }
+            .childChannelOption(.socketOption(.so_reuseaddr), value: reuseValue)
         
         #if DEBUG
         // TODO: temporary debug output

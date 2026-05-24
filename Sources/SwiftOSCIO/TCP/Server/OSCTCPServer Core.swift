@@ -220,7 +220,7 @@ extension OSCTCPServer.Core {
         
         #if DEBUG
         // TODO: temporary debug output
-        print("\(type(of: self)) \(#function) Binding \(isIPv4 ? "IPv4" : "IPv6") to: \(host):\(port). Interface was \(interface ?? "<nil>").")
+        print("\(type(of: Parent.self)) \(#function) Binding \(isIPv4 ? "IPv4" : "IPv6") to: \(host):\(port). Interface was \(interface ?? "<nil>").")
         #endif
         
         let configuredChannel = bootstrap

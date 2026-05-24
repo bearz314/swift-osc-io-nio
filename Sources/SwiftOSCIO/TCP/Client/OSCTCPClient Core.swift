@@ -185,7 +185,7 @@ extension OSCTCPClient.Core {
 
             #if DEBUG
             // TODO: temporary debug output
-            print("\(type(of: self)) \(#function) Connecting to: \(resolvedAddress.ipAddress ?? "<nil-address>"):\(resolvedAddress.port?.description ?? "<nil-port>"). Interface was \(interface ?? "<nil>")")
+            print("\(type(of: Parent.self)) \(#function) Connecting to: \(resolvedAddress.ipAddress ?? "<nil-address>"):\(resolvedAddress.port?.description ?? "<nil-port>"). Interface was \(interface ?? "<nil>")")
             #endif
             
             // connect to host

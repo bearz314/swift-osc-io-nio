@@ -217,6 +217,11 @@ extension OSCTCPServer.Core {
                 }
             }
         
+        #if DEBUG
+        // TODO: temporary debug output
+        print("\(type(of: self)) \(#function) Binding \(isIPv4 ? "IPv4" : "IPv6") to: \(host ?? "<nil-address>"):\(port). Interface was \(interface ?? "<nil>")")
+        #endif
+        
         let configuredChannel = bootstrap
             .bind(host: host, port: port)
         

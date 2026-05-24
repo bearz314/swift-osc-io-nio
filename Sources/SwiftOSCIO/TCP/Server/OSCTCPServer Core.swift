@@ -229,10 +229,12 @@ extension OSCTCPServer.Core {
             }
             .childChannelOption(.socketOption(.so_reuseaddr), value: reuseValue)
         
-        #if DEBUG
-        // TODO: temporary debug output
-        print("\(type(of: Parent.self)) \(#function) Binding \(isIPv4 ? "IPv4" : "IPv6") to: \(host):\(port). Interface was \(interface ?? "<nil>").")
-        #endif
+        // #if DEBUG
+        // print(
+        //     "\(type(of: Parent.self)) \(#function) Binding \(isIPv4 ? "IPv4" : "IPv6") to: \(host):\(port). "
+        //         + "Interface was \(interface ?? "<nil>")."
+        // )
+        // #endif
         
         let configuredChannel = bootstrap
             .bind(host: host, port: port)

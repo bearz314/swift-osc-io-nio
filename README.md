@@ -21,7 +21,7 @@ To use this extension as standalone dependency (instead of importing the **swift
 1. Add the **swift-osc-io-nio** repo as a dependency.
 
    ```swift
-   .package(url: "https://github.com/orchetect/swift-osc-io-nio", from: "1.0.0")
+   .package(url: "https://github.com/orchetect/swift-osc-io-nio", from: "1.2.0")
    ```
 
 2. Add **SwiftOSCIO** to your target.

@@ -161,8 +161,19 @@ extension OSCTCPServer.Core {
     }
     
     func _start() throws {
+        #if os(Darwin)
+        // NIO on Apple platforms support dual TCP "server" channels binding to both IPv4 or IPv6
         try _startIPv4()
         if isIPv6Enabled { try _startIPv6() }
+        #else
+        // TODO: NIO on Linux (and possibly Android) does not support dual TCP "server" channels
+        // however when binding to IPv6 a "sever" channel will also accept IPv4 connections using IPv6 address translation.
+        // the compromise is that IPv4 clients will be seen as having IPv6 addresses
+        // (ie: local loopback client connecting to 127.0.0.1 (IPv4)
+        // will be seen as "::ffff:127.0.0.1" (IPv6) which is not the same as "::1")
+        // See: https://stackoverflow.com/questions/49793630/is-ffff127-0-0-1-localhost
+        if isIPv6Enabled { try _startIPv6() } else { try _startIPv4() }
+        #endif
     }
     
     private func _startIPv4() throws {

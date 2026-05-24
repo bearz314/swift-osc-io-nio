@@ -176,7 +176,7 @@ extension OSCUDPClient.Core {
 
         // channel setup
         
-        #if os(Darwin)
+        #if canImport(Darwin)
         let reuseValue: ChannelOptions.Types.SocketOption.Value = isPortReuseEnabled ? 1 : 0
         #else
         // Linux (and possibly Android) requires port reuse to be enabled in order to allow local loopback connections

@@ -161,7 +161,7 @@ extension OSCTCPServer.Core {
     }
     
     func _start() throws {
-        #if os(Darwin)
+        #if canImport(Darwin)
         // NIO on Apple platforms support dual TCP "server" channels binding to both IPv4 or IPv6
         try _startIPv4()
         if isIPv6Enabled { try _startIPv6() }

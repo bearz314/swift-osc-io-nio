@@ -190,10 +190,16 @@ extension OSCUDPSocket.Core {
             0
         }
 
-        let broadcast: ChannelOptions.Types.SocketOption.Value = isIPv4BroadcastEnabled ? 1 : 0
+        // channel setup
+        
+        // Linux (and possibly Android) requires port reuse to be enabled in order to allow local loopback connections
+        let reuseValue: ChannelOptions.Types.SocketOption.Value = 1
+        
+        let broadcastValue: ChannelOptions.Types.SocketOption.Value = isIPv4BroadcastEnabled ? 1 : 0
+        
         let bootstrap = DatagramBootstrap(group: .singletonMultiThreadedEventLoopGroup)
-            .channelOption(.socketOption(.so_reuseaddr), value: 1)
-            .channelOption(.socketOption(.so_broadcast), value: broadcast)
+            .channelOption(.socketOption(.so_reuseaddr), value: reuseValue)
+            .channelOption(.socketOption(.so_broadcast), value: broadcastValue)
             .channelInitializer { channel in
                 channel.pipeline.addHandler(OSCUDPChannelHandler(oscServer: self))
             }

@@ -192,8 +192,13 @@ extension OSCTCPServer.Core {
             0
         }
         
+        // channel setup
+        
+        // Linux (and possibly Android) requires port reuse to be enabled in order to allow local loopback connections
+        let reuseValue: ChannelOptions.Types.SocketOption.Value = 1
+        
         let bootstrap = ServerBootstrap(group: .singletonMultiThreadedEventLoopGroup)
-            .serverChannelOption(.socketOption(.so_reuseaddr), value: 1)
+            .serverChannelOption(.socketOption(.so_reuseaddr), value: reuseValue)
             .childChannelInitializer { channel in
                 channel.eventLoop.makeCompletedFuture {
                     switch self.framingMode {

@@ -57,7 +57,7 @@ extension OSCUDPClient {
 
         let interface: String?
 
-        var isPortReuseEnabled: Bool { // TODO: does nothing now
+        var isPortReuseEnabled: Bool {
             get { syncQueue.sync { _isPortReuseEnabled } }
             set { syncQueue.sync { _isPortReuseEnabled = newValue } }
         }
@@ -174,13 +174,20 @@ extension OSCUDPClient.Core {
             0
         }
 
-        // Channel Setup
-        let broadcast: ChannelOptions.Types.SocketOption.Value = _isIPv4BroadcastEnabled ? 1 : 0
+        // channel setup
+        
+        #if os(Darwin)
+        let reuseValue: ChannelOptions.Types.SocketOption.Value = isPortReuseEnabled ? 1 : 0
+        #else
+        // Linux (and possibly Android) requires port reuse to be enabled in order to allow local loopback connections
+        let reuseValue: ChannelOptions.Types.SocketOption.Value = 1
+        #endif
+        
+        let broadcastValue: ChannelOptions.Types.SocketOption.Value = isIPv4BroadcastEnabled ? 1 : 0
+        
         let bootstrap = DatagramBootstrap(group: .singletonMultiThreadedEventLoopGroup)
-            // configure port reuse
-            .channelOption(.socketOption(.so_reuseaddr), value: 1)
-            // configure ipv4 broadcast
-            .channelOption(.socketOption(.so_broadcast), value: broadcast)
+            .channelOption(.socketOption(.so_reuseaddr), value: reuseValue)
+            .channelOption(.socketOption(.so_broadcast), value: broadcastValue)
 
         let configuredChannel = bootstrap
             // bind to host and port

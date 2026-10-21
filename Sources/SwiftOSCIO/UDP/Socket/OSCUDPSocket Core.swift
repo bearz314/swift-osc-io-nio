@@ -253,7 +253,7 @@ extension OSCUDPSocket.Core: _OSCPacketDispatcherProtocol {
 
 extension OSCUDPSocket.Core {
     func send(_ packet: OSCPacket, to host: String?, port: UInt16?) throws {
-        try queue.sync {
+        try syncOnQueue {
             guard isStarted else {
                 throw OSCIOError.notStarted
             }

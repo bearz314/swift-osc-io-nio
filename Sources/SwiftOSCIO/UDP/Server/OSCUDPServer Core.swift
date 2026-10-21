@@ -118,7 +118,7 @@ extension OSCUDPServer {
             _isIPv6Enabled = isIPv6Enabled
             let queue = queue ?? DispatchQueue(
                 label: "com.orchetect.SwiftOSC.OSCUDPServer.queue",
-                target: .global() // do NOT use syncQueue
+                target: .global() // Note: Do NOT use syncQueue!
             )
             self.queue = queue
             queue.setSpecific(key: queueKey, value: ())
@@ -136,16 +136,8 @@ extension OSCUDPServer.Core: Sendable { }
 // MARK: - Lifecycle
 
 extension OSCUDPServer.Core {
-    private func syncOnQueue<T>(_ operation: () throws -> T) rethrows -> T {
-        if DispatchQueue.getSpecific(key: queueKey) != nil {
-            return try operation()
-        }
-
-        return try queue.sync(execute: operation)
-    }
-    
     func start() throws {
-        try queue.sync {
+        try syncOnQueue {
             try _start()
         }
     }
@@ -219,6 +211,18 @@ extension OSCUDPServer.Core {
     private func _stopIPv6() {
         try? ipv6Channel?.close().wait()
         ipv6Channel = nil
+    }
+}
+
+// MARK: - Queue Utilities
+
+extension OSCUDPServer.Core {
+    private func syncOnQueue<T>(_ operation: () throws -> T) rethrows -> T {
+        if DispatchQueue.getSpecific(key: queueKey) != nil {
+            try operation()
+        } else {
+            try queue.sync(execute: operation)
+        }
     }
 }
 
